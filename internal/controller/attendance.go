@@ -57,7 +57,7 @@ func (ct *Controller) CheckOut(c *gin.Context) {
 
 	id, err := ct.Db.CheckOut(ctx, req)
 	if err != nil {
-		if errors.Is(err, repository.ErrEmployeeNotFound) || errors.Is(err, repository.ErrEmployeeNotCheckIn) {
+		if errors.Is(err, repository.ErrEmployeeNotFound) || errors.Is(err, repository.ErrEmployeeNotCheckIn) || errors.Is(err, repository.ErrEmployeeCheckOutAlready) {
 			c.IndentedJSON(http.StatusBadRequest, gin.H{
 				"message": err.Error(),
 			})

@@ -22,7 +22,18 @@ type PgRepo struct {
 func (pg *PgRepo) CheckIn(ctx context.Context, req model.AttendaceRequest) (uint, error) {
 
 	var id uint
-	err := pg.DB.QueryRowContext(
+	err := pg.DB.QueryRowContext(ctx,
+		`SELECT id FROM employees WHERE id = $1`, req.EmployeeId).Scan(&id)
+
+	if err == sql.ErrNoRows {
+		return 0, ErrEmployeeNotFound
+	}
+
+	if err != nil {
+		return 0, err
+	}
+
+	err = pg.DB.QueryRowContext(
 		ctx,
 		`SELECT id FROM attendances WHERE check_in::date = current_date AND employee_id = $1`,
 		req.EmployeeId).Scan(&id)
@@ -32,17 +43,6 @@ func (pg *PgRepo) CheckIn(ctx context.Context, req model.AttendaceRequest) (uint
 	}
 
 	if !errors.Is(err, sql.ErrNoRows) {
-		return 0, err
-	}
-
-	err = pg.DB.QueryRowContext(ctx,
-		`SELECT id FROM employees WHERE id = $1`, req.EmployeeId).Scan(&id)
-
-	if err == sql.ErrNoRows {
-		return 0, ErrEmployeeNotFound
-	}
-
-	if err != nil {
 		return 0, err
 	}
 
@@ -92,7 +92,7 @@ func (pg *PgRepo) CheckOut(ctx context.Context, req model.AttendaceRequest) (uin
 	var exist bool
 	err = pg.DB.QueryRowContext(
 		ctx,
-		`SELECT id, exists(check_out) FROM attendances WHERE check_in::date = current_date AND employee_id = $1 FOR UPDATE`,
+		`SELECT id, check_out is not null FROM attendances WHERE check_in::date = current_date AND employee_id = $1 FOR UPDATE`,
 		req.EmployeeId).Scan(&id, &exist)
 
 	if err != nil {
