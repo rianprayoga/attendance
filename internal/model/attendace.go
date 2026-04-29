@@ -9,8 +9,13 @@ type AttendaceResponse struct {
 	AttendaceId uint `json:"attendaceId"`
 }
 
-type TrxRecord struct {
-	Id      uint `json:"id"`
-	Amount  uint `json:"amount"`
-	Success bool `json:"success"`
+type AttendaceHistoryResponse struct {
+	AttendaceId uint   `json:"attendaceId"`
+	CheckIn     string `json:"checkIn"`
+	CheckOut    string `json:"checkOut"`
+	Status      string `json:"status"`
+}
+
+type Page[T any] struct {
+	Data []T `json:"data"`
 }

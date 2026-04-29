@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"lentera/internal/model"
 	"time"
 )
@@ -118,4 +119,41 @@ func (pg *PgRepo) CheckOut(ctx context.Context, req model.AttendaceRequest) (uin
 	}
 
 	return id, nil
+}
+
+func (pg *PgRepo) GetHistory(ctx context.Context, empId int, offset int, limit int) (*model.Page[model.AttendaceHistoryResponse], error) {
+
+	fmt.Println(empId, offset, limit)
+	rows, err := pg.DB.QueryContext(ctx,
+		`SELECT id, check_in, check_out, status FROM attendances WHERE employee_id = $3 ORDER BY id OFFSET $1 LIMIT $2 `,
+		offset*limit, limit, empId,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var res = make([]model.AttendaceHistoryResponse, 0)
+	for rows.Next() {
+		var tmp model.AttendaceHistoryResponse
+		if err := rows.Scan(
+			&tmp.AttendaceId,
+			&tmp.CheckIn,
+			&tmp.CheckOut,
+			&tmp.Status,
+		); err != nil {
+			return nil, err
+		}
+
+		res = append(res, tmp)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return &model.Page[model.AttendaceHistoryResponse]{
+		Data: res,
+	}, nil
 }

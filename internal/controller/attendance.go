@@ -3,10 +3,10 @@ package controller
 import (
 	"context"
 	"errors"
-	"fmt"
 	"lentera/internal/model"
 	"lentera/internal/repository"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -83,5 +83,23 @@ func (ct *Controller) History(c *gin.Context) {
 		return
 	}
 
-	fmt.Println(id)
+	empId, _ := strconv.Atoi(id)
+
+	page := c.DefaultQuery("page", "0")
+	size := c.DefaultQuery("size", "5")
+
+	intPage, _ := strconv.Atoi(page)
+	intSize, _ := strconv.Atoi(size)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	res, err := ct.Db.GetHistory(ctx, empId, intPage, intSize)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, res)
+
 }
