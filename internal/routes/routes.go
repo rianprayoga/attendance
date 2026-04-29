@@ -13,6 +13,6 @@ func SetupRoutes(router *gin.Engine, repo repository.PgRepo) {
 	}
 
 	router.POST("/attendance/check-in", c.CheckIn)
-	router.POST("/attendance/check-out", nil)
+	router.POST("/attendance/check-out", c.CheckOut)
 	router.GET("/attendance", nil)
 }
