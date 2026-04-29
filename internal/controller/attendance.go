@@ -1,0 +1,46 @@
+package controller
+
+import (
+	"context"
+	"errors"
+	"lentera/internal/model"
+	"lentera/internal/repository"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+type Controller struct {
+	Db repository.PgRepo
+}
+
+func (ct *Controller) CheckIn(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var req model.AttendaceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	id, err := ct.Db.CheckIn(ctx, req)
+	if err != nil {
+		if errors.Is(err, repository.ErrEmployeeNotFound) || errors.Is(err, repository.ErrEmployeeCheckInAlready) {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
+
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, model.AttendaceResponse{
+		EmployeeId:  req.EmployeeId,
+		AttendaceId: id,
+	})
+
+}
