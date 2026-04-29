@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
+	"fmt"
 	"lentera/internal/model"
 	"lentera/internal/repository"
 	"net/http"
@@ -21,7 +22,7 @@ func (ct *Controller) CheckIn(c *gin.Context) {
 
 	var req model.AttendaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -34,7 +35,7 @@ func (ct *Controller) CheckIn(c *gin.Context) {
 			return
 		}
 
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -51,7 +52,7 @@ func (ct *Controller) CheckOut(c *gin.Context) {
 
 	var req model.AttendaceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -64,7 +65,7 @@ func (ct *Controller) CheckOut(c *gin.Context) {
 			return
 		}
 
-		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -72,4 +73,15 @@ func (ct *Controller) CheckOut(c *gin.Context) {
 		EmployeeId:  req.EmployeeId,
 		AttendaceId: id,
 	})
+}
+
+func (ct *Controller) History(c *gin.Context) {
+	id := c.Query("employee_id")
+
+	if id == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "missing required param"})
+		return
+	}
+
+	fmt.Println(id)
 }
